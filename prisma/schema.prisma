@@ -1,0 +1,78 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model SellerProduct {
+  id            String   @id @default(cuid())
+  title         String
+  description   String
+  price         Int
+  oldPrice      Int?
+  costPrice     Int?
+  stock         Int      @default(0)
+  imageUrl      String?
+  category      String   @default("Другое")
+  sellerName    String
+  sellerId      String?
+  rating        Float    @default(0)
+  reviewCount   Int      @default(0)
+  views         Int      @default(0)
+  isTrending    Boolean  @default(false)
+  isRecommended Boolean  @default(false)
+  createdAt     DateTime @default(now())
+  reviews       Review[]
+}
+
+model Order {
+  id        String   @id @default(cuid())
+  name      String
+  phone     String
+  email     String   @default("")
+  address   String
+  comment   String?
+  total     Int
+  discount  Int      @default(0)
+  promoCode String?
+  items     String
+  status    String   @default("NEW")
+  createdAt DateTime @default(now())
+}
+
+model Seller {
+  id          String   @id @default(cuid())
+  name        String
+  shopName    String
+  email       String
+  phone       String
+  category    String
+  description String?
+  status      String   @default("PENDING")
+  rating      Float    @default(0)
+  verified    Boolean  @default(false)
+  createdAt   DateTime @default(now())
+}
+
+model SupportTicket {
+  id        String   @id @default(cuid())
+  name      String
+  email     String
+  topic     String
+  message   String
+  status    String   @default("OPEN")
+  createdAt DateTime @default(now())
+}
+
+model Review {
+  id        String        @id @default(cuid())
+  productId String
+  product   SellerProduct @relation(fields: [productId], references: [id], onDelete: Cascade)
+  customer  String
+  rating    Int
+  text      String
+  createdAt DateTime      @default(now())
+}

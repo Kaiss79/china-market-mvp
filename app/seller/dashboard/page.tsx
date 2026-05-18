@@ -4,14 +4,21 @@ import Link from "next/link";
 import { prisma } from "@/lib/db";
 
 export default async function SellerDashboardPage() {
-  const productsCount = await prisma.sellerProduct.count();
-  const ordersCount = await prisma.order.count();
-  const sellersCount = await prisma.seller.count();
+  let productsCount = 0, ordersCount = 0, sellersCount = 0;
+  let recentProducts: { id: string; title: string; price: number }[] = [];
 
-  const recentProducts = await prisma.sellerProduct.findMany({
-    take: 5,
-    orderBy: { createdAt: "desc" },
-  });
+  try {
+    const [pc, oc, sc, rp] = await Promise.all([
+      prisma.sellerProduct.count(),
+      prisma.order.count(),
+      prisma.seller.count(),
+      prisma.sellerProduct.findMany({ take: 5, orderBy: { createdAt: "desc" } }),
+    ]);
+    productsCount = pc; ordersCount = oc; sellersCount = sc;
+    recentProducts = rp;
+  } catch (e) {
+    console.error("DB error on seller/dashboard:", e);
+  }
 
   const aiRating = productsCount > 0 ? Math.min(95, 70 + productsCount * 3) : 0;
 
@@ -112,24 +119,15 @@ export default async function SellerDashboardPage() {
       <div className="dash-nav">
         <Link href="/seller/register" className="dash-link">
           <span>🏪</span>
-          <div>
-            <strong>Регистрация магазина</strong>
-            <p>Подать заявку на продавца</p>
-          </div>
+          <div><strong>Регистрация магазина</strong><p>Подать заявку на продавца</p></div>
         </Link>
         <Link href="/admin/orders" className="dash-link">
           <span>📦</span>
-          <div>
-            <strong>Все заказы</strong>
-            <p>Просмотр заказов платформы</p>
-          </div>
+          <div><strong>Все заказы</strong><p>Просмотр заказов платформы</p></div>
         </Link>
         <Link href="/admin/sellers" className="dash-link">
           <span>👥</span>
-          <div>
-            <strong>Продавцы</strong>
-            <p>Список продавцов платформы</p>
-          </div>
+          <div><strong>Продавцы</strong><p>Список продавцов платформы</p></div>
         </Link>
       </div>
     </main>

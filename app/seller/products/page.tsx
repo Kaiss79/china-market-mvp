@@ -6,12 +6,19 @@ import Link from "next/link";
 import ProductRow from "./ProductRow";
 
 export default async function SellerProductsPage() {
-  const [products, ordersData] = await Promise.all([
-    prisma.sellerProduct.findMany({ orderBy: { createdAt: "desc" } }),
-    prisma.order.aggregate({ _sum: { total: true } }),
-  ]);
+  let products: Awaited<ReturnType<typeof prisma.sellerProduct.findMany>> = [];
+  let totalRevenue = 0;
 
-  const totalRevenue = ordersData._sum.total ?? 0;
+  try {
+    const [p, ordersData] = await Promise.all([
+      prisma.sellerProduct.findMany({ orderBy: { createdAt: "desc" } }),
+      prisma.order.aggregate({ _sum: { total: true } }),
+    ]);
+    products = p;
+    totalRevenue = ordersData._sum.total ?? 0;
+  } catch (e) {
+    console.error("DB error on seller/products:", e);
+  }
 
   return (
     <main className="page-container">
@@ -24,7 +31,6 @@ export default async function SellerProductsPage() {
         <Link href="/seller/dashboard" className="btn-secondary">← Dashboard</Link>
       </div>
 
-      {/* Stats */}
       <div className="stats-row" style={{ gridTemplateColumns: "repeat(3, 1fr)" }}>
         <div className="stat-box">
           <div className="stat-icon">🛍️</div>
@@ -43,7 +49,6 @@ export default async function SellerProductsPage() {
         </div>
       </div>
 
-      {/* Add product form */}
       <div className="add-product-panel">
         <h2>➕ Добавить товар</h2>
         <form action={createSellerProduct} className="add-product-form">
@@ -99,7 +104,6 @@ export default async function SellerProductsPage() {
         </form>
       </div>
 
-      {/* Product list */}
       <div className="products-panel">
         <h2>Список товаров ({products.length})</h2>
         {products.length === 0 ? (

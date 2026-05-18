@@ -9,23 +9,34 @@ import WishlistButton from "@/app/components/WishlistButton";
 import ReviewForm from "@/app/components/ReviewForm";
 
 export default async function ProductPage({ params }: { params: { id: string } }) {
-  const product = await prisma.sellerProduct.findUnique({
-    where: { id: params.id },
-    include: { reviews: { orderBy: { createdAt: "desc" } } },
-  });
+  let product: Awaited<ReturnType<typeof prisma.sellerProduct.findUnique>> & {
+    reviews: { id: string; customer: string; rating: number; text: string; createdAt: Date }[]
+  } | null = null;
+  let similar: Awaited<ReturnType<typeof prisma.sellerProduct.findMany>> = [];
+
+  try {
+    product = await prisma.sellerProduct.findUnique({
+      where: { id: params.id },
+      include: { reviews: { orderBy: { createdAt: "desc" } } },
+    });
+
+    if (product) {
+      await prisma.sellerProduct.update({
+        where: { id: params.id },
+        data: { views: { increment: 1 } },
+      }).catch(() => {});
+
+      similar = await prisma.sellerProduct.findMany({
+        where: { category: product.category, id: { not: product.id } },
+        take: 4,
+        orderBy: { rating: "desc" },
+      });
+    }
+  } catch (e) {
+    console.error("DB error on product page:", e);
+  }
 
   if (!product) notFound();
-
-  await prisma.sellerProduct.update({
-    where: { id: params.id },
-    data: { views: { increment: 1 } },
-  });
-
-  const similar = await prisma.sellerProduct.findMany({
-    where: { category: product.category, id: { not: product.id } },
-    take: 4,
-    orderBy: { rating: "desc" },
-  });
 
   const discount = product.oldPrice && product.oldPrice > product.price
     ? Math.round((1 - product.price / product.oldPrice) * 100)
@@ -89,18 +100,12 @@ export default async function ProductPage({ params }: { params: { id: string } }
 
           <div className="product-detail-actions">
             <AddToCartButton product={{
-              id: product.id,
-              title: product.title,
-              price: product.price,
-              imageUrl: product.imageUrl,
-              sellerName: product.sellerName,
+              id: product.id, title: product.title,
+              price: product.price, imageUrl: product.imageUrl, sellerName: product.sellerName,
             }} />
             <WishlistButton product={{
-              id: product.id,
-              title: product.title,
-              price: product.price,
-              imageUrl: product.imageUrl,
-              sellerName: product.sellerName,
+              id: product.id, title: product.title,
+              price: product.price, imageUrl: product.imageUrl, sellerName: product.sellerName,
             }} />
           </div>
 

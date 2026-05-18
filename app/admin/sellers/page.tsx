@@ -5,7 +5,14 @@ import { prisma } from "@/lib/db";
 import { updateSellerStatus, toggleVerified } from "./actions";
 
 export default async function AdminSellersPage() {
-  const sellers = await prisma.seller.findMany({ orderBy: { createdAt: "desc" } });
+  let sellers: Awaited<ReturnType<typeof prisma.seller.findMany>> = [];
+
+  try {
+    sellers = await prisma.seller.findMany({ orderBy: { createdAt: "desc" } });
+  } catch (e) {
+    console.error("DB error on admin/sellers:", e);
+  }
+
   const pending = sellers.filter((s) => s.status === "PENDING").length;
   const approved = sellers.filter((s) => s.status === "APPROVED").length;
 
@@ -50,9 +57,7 @@ export default async function AdminSellersPage() {
               <div className="order-header">
                 <div>
                   <h3 style={{ margin: "0 0 4px" }}>{seller.shopName}</h3>
-                  <span className="order-date">
-                    {new Date(seller.createdAt).toLocaleString("ru-RU")}
-                  </span>
+                  <span className="order-date">{new Date(seller.createdAt).toLocaleString("ru-RU")}</span>
                 </div>
                 <div style={{ textAlign: "right", display: "flex", flexDirection: "column", gap: "4px", alignItems: "flex-end" }}>
                   <span className={`status-badge status-${seller.status}`}>{seller.status}</span>
@@ -69,9 +74,7 @@ export default async function AdminSellersPage() {
               </div>
 
               {seller.description && (
-                <p style={{ color: "#374151", fontSize: "14px", margin: "8px 0 0" }}>
-                  {seller.description}
-                </p>
+                <p style={{ color: "#374151", fontSize: "14px", margin: "8px 0 0" }}>{seller.description}</p>
               )}
 
               <div style={{ display: "flex", gap: "10px", marginTop: "12px", flexWrap: "wrap" }}>
@@ -83,7 +86,6 @@ export default async function AdminSellersPage() {
                   </select>
                   <button type="submit">Обновить</button>
                 </form>
-
                 <form action={toggleVerified.bind(null, seller.id, !seller.verified)}>
                   <button type="submit" className="btn-secondary" style={{ fontSize: "13px", padding: "6px 14px" }}>
                     {seller.verified ? "Снять верификацию" : "✅ Верифицировать"}

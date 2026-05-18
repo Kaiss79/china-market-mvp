@@ -5,7 +5,14 @@ import { prisma } from "@/lib/db";
 import { updateOrderStatus } from "./actions";
 
 export default async function AdminOrdersPage() {
-  const orders = await prisma.order.findMany({ orderBy: { createdAt: "desc" } });
+  let orders: Awaited<ReturnType<typeof prisma.order.findMany>> = [];
+
+  try {
+    orders = await prisma.order.findMany({ orderBy: { createdAt: "desc" } });
+  } catch (e) {
+    console.error("DB error on admin/orders:", e);
+  }
+
   const totalRevenue = orders.reduce((s, o) => s + o.total, 0);
   const newCount = orders.filter((o) => o.status === "NEW").length;
 
@@ -54,15 +61,11 @@ export default async function AdminOrdersPage() {
                 <div className="order-header">
                   <div>
                     <h3 style={{ margin: "0 0 4px" }}>{order.name}</h3>
-                    <span className="order-date">
-                      {new Date(order.createdAt).toLocaleString("ru-RU")}
-                    </span>
+                    <span className="order-date">{new Date(order.createdAt).toLocaleString("ru-RU")}</span>
                   </div>
                   <div style={{ textAlign: "right" }}>
                     <div className="order-total">{(order.total / 100).toFixed(2)} грн</div>
-                    <span className={`status-badge status-${order.status}`}>
-                      {order.status}
-                    </span>
+                    <span className={`status-badge status-${order.status}`}>{order.status}</span>
                   </div>
                 </div>
 
@@ -87,10 +90,7 @@ export default async function AdminOrdersPage() {
 
                 {order.comment && <div className="order-comment">💬 {order.comment}</div>}
 
-                <form
-                  action={updateOrderStatus.bind(null, order.id)}
-                  className="order-status-form"
-                >
+                <form action={updateOrderStatus.bind(null, order.id)} className="order-status-form">
                   <select name="status" defaultValue={order.status}>
                     <option value="NEW">NEW</option>
                     <option value="CONFIRMED">CONFIRMED</option>

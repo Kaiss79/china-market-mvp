@@ -73,18 +73,32 @@ export default async function HomePage({
     sort === "popular" ? { views: "desc" as const } :
     { createdAt: "desc" as const };
 
-  const [products, trending, recommended, stats] = await Promise.all([
-    prisma.sellerProduct.findMany({ where, orderBy, take: 40 }),
-    prisma.sellerProduct.findMany({ where: { isTrending: true }, take: 8, orderBy: { views: "desc" } }),
-    prisma.sellerProduct.findMany({ where: { isRecommended: true }, take: 8, orderBy: { rating: "desc" } }),
-    Promise.all([
-      prisma.sellerProduct.count(),
-      prisma.seller.count(),
-      prisma.order.count(),
-    ]),
-  ]);
+  let products: Product[] = [];
+  let trending: Product[] = [];
+  let recommended: Product[] = [];
+  let totalProducts = 0;
+  let totalSellers = 0;
+  let totalOrders = 0;
 
-  const [totalProducts, totalSellers, totalOrders] = stats;
+  try {
+    const [p, t, r, stats] = await Promise.all([
+      prisma.sellerProduct.findMany({ where, orderBy, take: 40 }),
+      prisma.sellerProduct.findMany({ where: { isTrending: true }, take: 8, orderBy: { views: "desc" } }),
+      prisma.sellerProduct.findMany({ where: { isRecommended: true }, take: 8, orderBy: { rating: "desc" } }),
+      Promise.all([
+        prisma.sellerProduct.count(),
+        prisma.seller.count(),
+        prisma.order.count(),
+      ]),
+    ]);
+    products = p;
+    trending = t;
+    recommended = r;
+    [totalProducts, totalSellers, totalOrders] = stats;
+  } catch (e) {
+    console.error("DB error on homepage:", e);
+  }
+
   const isFiltered = !!(search || category || minPrice || maxPrice);
 
   return (
@@ -149,9 +163,7 @@ export default async function HomePage({
               <Link href="/?sort=popular" className="see-all">Смотреть все →</Link>
             </div>
             <div className="products-grid">
-              {trending.map((p) => (
-                <ProductCard key={p.id} product={p} />
-              ))}
+              {trending.map((p) => <ProductCard key={p.id} product={p} />)}
             </div>
           </section>
         )}
@@ -164,9 +176,7 @@ export default async function HomePage({
               <Link href="/?sort=rating" className="see-all">Смотреть все →</Link>
             </div>
             <div className="products-grid">
-              {recommended.map((p) => (
-                <ProductCard key={p.id} product={p} />
-              ))}
+              {recommended.map((p) => <ProductCard key={p.id} product={p} />)}
             </div>
           </section>
         )}
@@ -217,8 +227,8 @@ export default async function HomePage({
             <div className="empty-state">
               <div>🔍</div>
               <h3>Ничего не найдено</h3>
-              <p>Попробуйте другой запрос</p>
-              <Link href="/" className="btn-primary">На главную</Link>
+              <p>{isFiltered ? "Попробуйте другой запрос" : "Товары скоро появятся"}</p>
+              {isFiltered && <Link href="/" className="btn-primary">На главную</Link>}
             </div>
           ) : (
             <div className="products-grid">
@@ -288,4 +298,3 @@ function ProductCard({ product: p }: { product: Product }) {
     </div>
   );
 }
-

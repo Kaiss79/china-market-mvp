@@ -5,7 +5,14 @@ import { prisma } from "@/lib/db";
 import { updateTicketStatus } from "./actions";
 
 export default async function AdminSupportPage() {
-  const tickets = await prisma.supportTicket.findMany({ orderBy: { createdAt: "desc" } });
+  let tickets: Awaited<ReturnType<typeof prisma.supportTicket.findMany>> = [];
+
+  try {
+    tickets = await prisma.supportTicket.findMany({ orderBy: { createdAt: "desc" } });
+  } catch (e) {
+    console.error("DB error on admin/support:", e);
+  }
+
   const openCount = tickets.filter((t) => t.status === "OPEN").length;
   const closedCount = tickets.filter((t) => t.status !== "OPEN").length;
 
@@ -56,20 +63,14 @@ export default async function AdminSupportPage() {
                   {ticket.status === "OPEN" ? "Открыто" : "Закрыто"}
                 </span>
               </div>
-
               <div className="order-meta">
                 <span>👤 {ticket.name}</span>
                 <span>📧 {ticket.email}</span>
               </div>
-
               <p style={{ color: "#374151", fontSize: "14px", margin: "10px 0 0", lineHeight: "1.6" }}>
                 {ticket.message}
               </p>
-
-              <form
-                action={updateTicketStatus.bind(null, ticket.id)}
-                className="order-status-form"
-              >
+              <form action={updateTicketStatus.bind(null, ticket.id)} className="order-status-form">
                 <select name="status" defaultValue={ticket.status}>
                   <option value="OPEN">OPEN</option>
                   <option value="CLOSED">CLOSED</option>

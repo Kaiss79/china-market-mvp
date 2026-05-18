@@ -5,9 +5,13 @@ import { prisma } from "@/lib/db";
 import { formatMoney } from "@/lib/money";
 
 export default async function AdminProductsPage() {
-  const products = await prisma.sellerProduct.findMany({
-    orderBy: { createdAt: "desc" },
-  });
+  let products: Awaited<ReturnType<typeof prisma.sellerProduct.findMany>> = [];
+
+  try {
+    products = await prisma.sellerProduct.findMany({ orderBy: { createdAt: "desc" } });
+  } catch (e) {
+    console.error("DB error on admin/products:", e);
+  }
 
   const totalStock = products.reduce((s, p) => s + p.stock, 0);
   const trending = products.filter((p) => p.isTrending).length;

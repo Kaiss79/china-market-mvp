@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useSettings } from "./components/SettingsProvider";
 
 export type CartProduct = {
   id: string;
@@ -11,6 +12,7 @@ export type CartProduct = {
 };
 
 export default function AddToCartButton({ product }: { product: CartProduct }) {
+  const { t } = useSettings();
   const [added, setAdded] = useState(false);
 
   function addToCart() {
@@ -36,7 +38,7 @@ export default function AddToCartButton({ product }: { product: CartProduct }) {
 
   return (
     <button onClick={addToCart} className={`add-to-cart-btn ${added ? "added" : ""}`}>
-      {added ? "✓ Добавлено" : "В корзину"}
+      {added ? t("common.added") : t("common.add_to_cart")}
     </button>
   );
 }

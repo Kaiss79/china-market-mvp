@@ -1,14 +1,23 @@
 export const dynamic = "force-dynamic";
 
+import { cookies } from "next/headers";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/db";
-import { formatMoney } from "@/lib/money";
+import { DEFAULT_LANG, getT, type Lang } from "@/lib/i18n";
 import AddToCartButton from "@/app/AddToCartButton";
 import WishlistButton from "@/app/components/WishlistButton";
 import ReviewForm from "@/app/components/ReviewForm";
+import Price from "@/app/components/Price";
+
+const VALID_LANGS: Lang[] = ["ru", "uk", "en", "ro", "de", "zh"];
 
 export default async function ProductPage({ params }: { params: { id: string } }) {
+  const jar = cookies();
+  const rawLang = jar.get("china_lang")?.value ?? DEFAULT_LANG;
+  const lang: Lang = VALID_LANGS.includes(rawLang as Lang) ? (rawLang as Lang) : DEFAULT_LANG;
+  const t = getT(lang);
+
   let product: Awaited<ReturnType<typeof prisma.sellerProduct.findUnique>> & {
     reviews: { id: string; customer: string; rating: number; text: string; createdAt: Date }[]
   } | null = null;
@@ -45,7 +54,7 @@ export default async function ProductPage({ params }: { params: { id: string } }
   return (
     <div className="page-wrap">
       <div className="breadcrumb">
-        <Link href="/">Главная</Link>
+        <Link href="/">{t("nav.home")}</Link>
         <span>›</span>
         <Link href={`/?category=${encodeURIComponent(product.category)}`}>{product.category}</Link>
         <span>›</span>
@@ -72,29 +81,29 @@ export default async function ProductPage({ params }: { params: { id: string } }
             <span className="stars">
               {"★".repeat(Math.round(product.rating))}{"☆".repeat(5 - Math.round(product.rating))}
             </span>
-            <span className="review-count">({product.reviewCount} отзывов)</span>
-            <span className="product-detail-views">👁 {product.views} просмотров</span>
+            <span className="review-count">({product.reviewCount} {t("product.reviews_count")})</span>
+            <span className="product-detail-views">👁 {product.views} {t("product.views")}</span>
           </div>
 
           <div className="product-detail-price-block">
-            <span className="product-detail-price">{formatMoney(product.price)}</span>
+            <Price amount={product.price} className="product-detail-price" />
             {product.oldPrice && product.oldPrice > product.price && (
-              <span className="product-detail-old-price">{formatMoney(product.oldPrice)}</span>
+              <Price amount={product.oldPrice} className="product-detail-old-price" />
             )}
           </div>
 
           <p className="product-detail-desc">{product.description}</p>
 
           <div className="product-detail-seller">
-            <span>🏪 Продавец:</span>
+            <span>🏪 {t("product.seller")}:</span>
             <strong>{product.sellerName}</strong>
           </div>
 
           <div className="product-detail-stock">
             {product.stock > 0 ? (
-              <span className="in-stock">✅ В наличии ({product.stock} шт.)</span>
+              <span className="in-stock">✅ {t("product.in_stock")} ({product.stock} {t("product.pcs")})</span>
             ) : (
-              <span className="out-of-stock">❌ Нет в наличии</span>
+              <span className="out-of-stock">❌ {t("product.out_of_stock")}</span>
             )}
           </div>
 
@@ -110,26 +119,25 @@ export default async function ProductPage({ params }: { params: { id: string } }
           </div>
 
           <div className="product-detail-trust">
-            <div>🔒 Безопасная оплата</div>
-            <div>🚚 Доставка 2–5 дней</div>
-            <div>↩️ Возврат 14 дней</div>
-            <div>📞 Поддержка 24/7</div>
+            <div>🔒 {t("product.safe_pay")}</div>
+            <div>🚚 {t("product.delivery")}</div>
+            <div>↩️ {t("product.returns")}</div>
+            <div>📞 {t("product.support_247")}</div>
           </div>
 
           <div className="ai-analysis-box">
-            <h3>🤖 AI-анализ товара</h3>
+            <h3>{t("product.ai_analysis")}</h3>
             <p>
-              Категория <strong>{product.category}</strong>, продавец{" "}
-              <strong>{product.sellerName}</strong>, рейтинг{" "}
-              <strong>{product.rating.toFixed(1)}/5</strong> ({product.reviewCount} отзывов).
-              {discount ? ` Скидка ${discount}% от первоначальной цены.` : ""}
-              {product.isTrending ? " Товар в тренде — высокий спрос прямо сейчас." : ""}
+              {t("product.category")} <strong>{product.category}</strong>, {t("product.seller").toLowerCase()}{" "}
+              <strong>{product.sellerName}</strong>, {product.rating.toFixed(1)}/5 ({product.reviewCount} {t("product.reviews_count")}).
+              {discount ? ` ${t("product.discount")} ${discount}%.` : ""}
+              {product.isTrending ? ` ${t("product.trending")}` : ""}
             </p>
             <p>
-              <strong>Вывод:</strong>{" "}
-              {product.rating >= 4 ? "Рекомендуем к покупке — высокий рейтинг." :
-               product.rating >= 3 ? "Средние оценки — прочитайте отзывы." :
-               "Мало отзывов — первым оцените товар."}
+              <strong>{t("product.ai_conclusion")}</strong>{" "}
+              {product.rating >= 4 ? t("product.recommend_high") :
+               product.rating >= 3 ? t("product.recommend_mid") :
+               t("product.recommend_low")}
             </p>
           </div>
         </div>
@@ -137,7 +145,7 @@ export default async function ProductPage({ params }: { params: { id: string } }
 
       {similar.length > 0 && (
         <section className="products-section" style={{ marginTop: "2rem" }}>
-          <h2 className="section-title">Похожие товары</h2>
+          <h2 className="section-title">{t("product.similar")}</h2>
           <div className="products-grid">
             {similar.map((p) => (
               <div key={p.id} className="product-card">
@@ -150,11 +158,11 @@ export default async function ProductPage({ params }: { params: { id: string } }
                   <span className="product-category">{p.category}</span>
                   <Link href={`/product/${p.id}`} className="product-title">{p.title}</Link>
                   <div className="product-price-row">
-                    <span className="product-price">{formatMoney(p.price)}</span>
+                    <Price amount={p.price} className="product-price" />
                   </div>
                   <div className="product-actions">
                     <AddToCartButton product={{ id: p.id, title: p.title, price: p.price, imageUrl: p.imageUrl, sellerName: p.sellerName }} />
-                    <Link href={`/product/${p.id}`} className="btn-view">Детали</Link>
+                    <Link href={`/product/${p.id}`} className="btn-view">{t("product.view_details")}</Link>
                   </div>
                 </div>
               </div>
@@ -164,9 +172,9 @@ export default async function ProductPage({ params }: { params: { id: string } }
       )}
 
       <section className="reviews-section">
-        <h2 className="section-title">Отзывы ({product.reviews.length})</h2>
+        <h2 className="section-title">{t("product.reviews")} ({product.reviews.length})</h2>
         {product.reviews.length === 0 ? (
-          <p className="no-reviews">Пока нет отзывов. Будьте первым!</p>
+          <p className="no-reviews">{t("product.no_reviews")}</p>
         ) : (
           <div className="reviews-list">
             {product.reviews.map((r) => (
@@ -184,7 +192,7 @@ export default async function ProductPage({ params }: { params: { id: string } }
           </div>
         )}
         <div className="review-form-wrap">
-          <h3>Оставить отзыв</h3>
+          <h3>{t("product.leave_review")}</h3>
           <ReviewForm productId={product.id} />
         </div>
       </section>

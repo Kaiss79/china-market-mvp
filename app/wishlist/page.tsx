@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useSettings } from "@/app/components/SettingsProvider";
 
 type WishItem = {
   id: string;
@@ -11,11 +12,8 @@ type WishItem = {
   sellerName?: string;
 };
 
-function fmt(kopecks: number) {
-  return (kopecks / 100).toFixed(2) + " грн";
-}
-
 export default function WishlistPage() {
+  const { t, formatPrice } = useSettings();
   const [wishlist, setWishlist] = useState<WishItem[]>([]);
   const [mounted, setMounted] = useState(false);
 
@@ -53,19 +51,19 @@ export default function WishlistPage() {
 
   return (
     <div className="page-wrap">
-      <h1 className="page-title">🤍 Избранное</h1>
+      <h1 className="page-title">{t("wishlist.title")}</h1>
 
       {wishlist.length === 0 ? (
         <div className="empty-state">
           <div>🤍</div>
-          <h3>Список избранного пуст</h3>
-          <p>Добавляйте товары в избранное — нажмите 🤍 на карточке товара</p>
-          <Link href="/" className="btn-primary">Перейти в каталог</Link>
+          <h3>{t("wishlist.empty")}</h3>
+          <p>{t("wishlist.empty_desc")}</p>
+          <Link href="/" className="btn-primary">{t("wishlist.go_catalog")}</Link>
         </div>
       ) : (
         <>
           <p style={{ color: "#64748b", marginBottom: "8px" }}>
-            {wishlist.length} {wishlist.length === 1 ? "товар" : wishlist.length < 5 ? "товара" : "товаров"} в избранном
+            {wishlist.length}
           </p>
           <div className="wishlist-grid">
             {wishlist.map((item) => (
@@ -85,14 +83,16 @@ export default function WishlistPage() {
                       🏪 {item.sellerName}
                     </div>
                   )}
-                  <div className="wishlist-card-price">{fmt(item.price)}</div>
+                  <div className="wishlist-card-price" suppressHydrationWarning>
+                    {formatPrice(item.price)}
+                  </div>
                   <div className="wishlist-card-actions">
                     <button
                       onClick={() => addToCart(item)}
                       className="btn-primary"
                       style={{ fontSize: "13px", padding: "8px 14px" }}
                     >
-                      В корзину
+                      {t("wishlist.add_to_cart")}
                     </button>
                     <button
                       onClick={() => remove(item.id)}

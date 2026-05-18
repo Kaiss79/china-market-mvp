@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useSettings } from "@/app/components/SettingsProvider";
 
 type CartItem = {
   id: string;
@@ -17,11 +18,8 @@ function safePrice(v: unknown): number {
   return isNaN(n) || n < 0 ? 0 : n;
 }
 
-function fmt(kopecks: number) {
-  return (safePrice(kopecks) / 100).toFixed(2) + " грн";
-}
-
 export default function CartPage() {
+  const { t, formatPrice } = useSettings();
   const [cart, setCart] = useState<CartItem[]>([]);
   const [mounted, setMounted] = useState(false);
 
@@ -68,23 +66,23 @@ export default function CartPage() {
 
   return (
     <div className="page-wrap">
-      <h1 className="page-title">🛒 Корзина</h1>
+      <h1 className="page-title">{t("cart.title")}</h1>
 
       {cart.length === 0 ? (
         <div className="empty-state">
           <div>🛒</div>
-          <h3>Корзина пустая</h3>
-          <p>Добавьте товары из каталога</p>
-          <Link href="/" className="btn-primary">Перейти в каталог</Link>
+          <h3>{t("cart.empty")}</h3>
+          <p>{t("cart.empty_desc")}</p>
+          <Link href="/" className="btn-primary">{t("cart.go_catalog")}</Link>
         </div>
       ) : (
         <div className="cart-layout">
           <div className="cart-items">
             <div className="cart-items-header">
-              <span>Товар</span>
-              <span>Цена</span>
-              <span>Кол-во</span>
-              <span>Сумма</span>
+              <span>{t("cart.product")}</span>
+              <span>{t("cart.price")}</span>
+              <span>{t("cart.qty")}</span>
+              <span>{t("cart.sum")}</span>
               <span></span>
             </div>
 
@@ -97,33 +95,42 @@ export default function CartPage() {
                     {item.sellerName && <span className="cart-seller">🏪 {item.sellerName}</span>}
                   </div>
                 </div>
-                <div className="cart-price">{fmt(item.price)}</div>
+                <div className="cart-price" suppressHydrationWarning>{formatPrice(item.price)}</div>
                 <div className="cart-qty-ctrl">
                   <button onClick={() => changeQty(item.id, -1)}>−</button>
                   <span>{item.quantity}</span>
                   <button onClick={() => changeQty(item.id, 1)}>+</button>
                 </div>
-                <div className="cart-subtotal">{fmt(item.price * item.quantity)}</div>
+                <div className="cart-subtotal" suppressHydrationWarning>{formatPrice(item.price * item.quantity)}</div>
                 <button onClick={() => remove(item.id)} className="cart-remove">✕</button>
               </div>
             ))}
 
             <div className="cart-footer">
-              <button onClick={clearCart} className="btn-clear-cart">Очистить корзину</button>
-              <Link href="/" className="btn-continue">← Продолжить покупки</Link>
+              <button onClick={clearCart} className="btn-clear-cart">{t("cart.clear")}</button>
+              <Link href="/" className="btn-continue">{t("cart.continue")}</Link>
             </div>
           </div>
 
           <div className="cart-summary-box">
-            <h3>Сумма заказа</h3>
-            <div className="cart-summary-row"><span>Товаров</span><span>{cart.reduce((s, i) => s + i.quantity, 0)} шт.</span></div>
-            <div className="cart-summary-row"><span>Доставка</span><span className="free">Бесплатно</span></div>
-            <div className="cart-summary-row total"><span>Итого</span><strong>{fmt(total)}</strong></div>
-            <div className="promo-hint">🎟 Промокод <strong>CHINA10</strong> = скидка 10%</div>
-            <Link href="/checkout" className="btn-checkout">Оформить заказ</Link>
+            <h3>{t("cart.order_total")}</h3>
+            <div className="cart-summary-row">
+              <span>{t("cart.items")}</span>
+              <span>{cart.reduce((s, i) => s + i.quantity, 0)} {t("cart.pcs")}</span>
+            </div>
+            <div className="cart-summary-row">
+              <span>{t("cart.delivery")}</span>
+              <span className="free">{t("cart.free")}</span>
+            </div>
+            <div className="cart-summary-row total">
+              <span>{t("cart.total")}</span>
+              <strong suppressHydrationWarning>{formatPrice(total)}</strong>
+            </div>
+            <div className="promo-hint">{t("cart.promo_hint")}</div>
+            <Link href="/checkout" className="btn-checkout">{t("cart.checkout")}</Link>
             <div className="cart-badges">
-              <span>🔒 Безопасная оплата</span>
-              <span>🚚 Доставка по Украине</span>
+              <span>{t("cart.safe_pay")}</span>
+              <span>{t("cart.delivery_ua")}</span>
             </div>
           </div>
         </div>

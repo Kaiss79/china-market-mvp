@@ -53,6 +53,7 @@ export default function SiteHeader() {
               {c.icon} {t(c.labelKey)}
             </Link>
           ))}
+          <Link href="/sell" className="sell-nav-link">🏪 {t("nav.seller")}</Link>
           <Link href="/support">{t("nav.support")}</Link>
           <Link href="/admin" className="admin-nav-link">{t("nav.admin")}</Link>
 

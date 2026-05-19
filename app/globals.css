@@ -4180,108 +4180,49 @@ input, textarea, select {
   .product-detail-layout { gap: 24px; }
 }
 
+
 /* ===== LANGUAGE & CURRENCY SWITCHERS ===== */
-.sw-group {
-  display: flex;
-  gap: 6px;
-  align-items: center;
-}
-
-.sw-dropdown {
-  position: relative;
-}
-
-.sw-btn {
+.nav-switcher {
   display: flex;
   align-items: center;
   gap: 4px;
-  padding: 6px 10px;
-  border: 1.5px solid #e2e8f0;
-  border-radius: 8px;
-  background: #fff;
-  cursor: pointer;
-  font-size: 12px;
-  font-weight: 700;
-  color: #0f172a;
-  transition: border-color 0.18s, background 0.18s;
-  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.nav-sw-icon {
+  font-size: 14px;
   line-height: 1;
 }
 
-.sw-btn:hover {
-  border-color: #e53e3e;
-  background: #fff5f5;
-  color: #e53e3e;
-}
-
-.sw-arrow {
-  font-size: 9px;
-  opacity: 0.55;
-  margin-left: 1px;
-}
-
-.sw-menu {
-  position: absolute;
-  top: calc(100% + 6px);
-  right: 0;
-  background: #fff;
-  border: 1.5px solid #e2e8f0;
-  border-radius: 12px;
-  box-shadow: 0 12px 40px rgba(0,0,0,0.13);
-  min-width: 170px;
-  z-index: 2000;
-  padding: 6px;
-}
-
-.sw-item {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  width: 100%;
-  padding: 8px 12px;
-  border: none;
-  border-radius: 8px;
-  background: transparent;
+.nav-select {
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-radius: 6px;
+  padding: 5px 8px;
+  font-size: 12px;
+  font-weight: 600;
   cursor: pointer;
-  font-size: 13px;
-  color: #374151;
-  text-align: left;
-  transition: background 0.12s;
+  outline: none;
+  appearance: none;
+  -webkit-appearance: none;
+  min-width: 64px;
+  text-align: center;
 }
 
-.sw-item:hover {
-  background: #f8fafc;
+.nav-select:hover,
+.nav-select:focus {
+  background: rgba(255, 255, 255, 0.22);
+  border-color: rgba(255, 255, 255, 0.5);
 }
 
-.sw-item.active {
-  background: #fff5f5;
-  color: #e53e3e;
-  font-weight: 700;
+.nav-select option {
+  background: #1e293b;
+  color: #fff;
+  font-weight: 600;
 }
 
-.sw-symbol {
-  display: inline-block;
-  min-width: 18px;
-  font-weight: 700;
-  color: #64748b;
-}
-
-/* Mobile: hide full switcher labels, show compact */
+/* Keep switchers visible at all screen sizes */
 @media (max-width: 768px) {
-  .sw-group {
-    gap: 4px;
-  }
-  .sw-btn {
-    padding: 5px 7px;
-    font-size: 11px;
-  }
-  .sw-menu {
-    min-width: 150px;
-  }
-}
-
-@media (max-width: 480px) {
-  .sw-group {
-    display: none;
-  }
+  .nav-select { font-size: 11px; padding: 4px 6px; min-width: 54px; }
 }

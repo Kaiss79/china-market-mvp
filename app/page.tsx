@@ -12,6 +12,12 @@ import Price from "./components/Price";
 
 const VALID_LANGS: Lang[] = ["ru", "uk", "en", "ro", "de", "zh"];
 
+type Product = {
+  id: string; title: string; description: string; price: number; oldPrice?: number | null;
+  imageUrl?: string | null; sellerName: string; category: string; rating: number;
+  reviewCount: number; stock: number; isTrending: boolean;
+};
+
 const CATEGORIES = [
   { labelKey: "cat.electronics", icon: "📱", slug: "Электроника" },
   { labelKey: "cat.gadgets", icon: "🎧", slug: "Гаджеты" },
@@ -25,6 +31,18 @@ const CATEGORIES = [
   { labelKey: "cat.kids", icon: "🧸", slug: "Дети" },
   { labelKey: "cat.office", icon: "💼", slug: "Офис" },
   { labelKey: "cat.accessories", icon: "⌚", slug: "Аксессуары" },
+];
+
+// Shown on Vercel when DB is empty (SQLite not persisted in serverless)
+const DEMO_PRODUCTS: Product[] = [
+  { id: "demo-1", title: "AirPods Pro", description: "Premium wireless earbuds with active noise cancellation and spatial audio. Excellent sound quality and comfort for all-day wear.", price: 299900, oldPrice: 399900, imageUrl: "https://picsum.photos/seed/airpods/400/300", sellerName: "TechZone UA", category: "Электроника", rating: 4.8, reviewCount: 324, stock: 45, isTrending: true },
+  { id: "demo-2", title: "Smart Watch Pro", description: "Smartwatch with health monitoring, GPS, AMOLED display and 7-day battery life. Compatible with iOS and Android.", price: 249900, oldPrice: 319900, imageUrl: "https://picsum.photos/seed/smartwatch/400/300", sellerName: "GadgetStore", category: "Гаджеты", rating: 4.6, reviewCount: 218, stock: 30, isTrending: true },
+  { id: "demo-3", title: "Power Bank 20000mAh", description: "High-capacity power bank with 65W fast charging, supports multiple devices simultaneously. Compact and lightweight design.", price: 89900, oldPrice: 119900, imageUrl: "https://picsum.photos/seed/powerbank/400/300", sellerName: "PowerTech", category: "Гаджеты", rating: 4.5, reviewCount: 156, stock: 80, isTrending: false },
+  { id: "demo-4", title: "Wireless Headphones", description: "Over-ear headphones with 30-hour battery, premium sound, foldable design. Perfect for music, gaming and calls.", price: 159900, imageUrl: "https://picsum.photos/seed/headphones/400/300", sellerName: "AudioMax", category: "Электроника", rating: 4.4, reviewCount: 89, stock: 25, isTrending: true },
+  { id: "demo-5", title: "Car Vacuum Cleaner", description: "Portable wireless car vacuum with strong suction, HEPA filter and flexible nozzle. Easy to use and clean.", price: 59900, oldPrice: 79900, imageUrl: "https://picsum.photos/seed/vacuum/400/300", sellerName: "AutoShop", category: "Авто", rating: 4.3, reviewCount: 67, stock: 60, isTrending: false },
+  { id: "demo-6", title: "LED Desk Lamp", description: "Smart LED lamp with touch control, 5 brightness levels, USB charging port and eye-care technology.", price: 44900, imageUrl: "https://picsum.photos/seed/ledlamp/400/300", sellerName: "SmartHome UA", category: "Дом", rating: 4.7, reviewCount: 143, stock: 90, isTrending: false },
+  { id: "demo-7", title: "USB-C Hub 7-in-1", description: "Multiport USB-C hub with HDMI 4K, 3x USB 3.0, SD card reader, PD charging. Works with MacBook and laptop.", price: 69900, oldPrice: 89900, imageUrl: "https://picsum.photos/seed/usbhub/400/300", sellerName: "TechZone UA", category: "Аксессуары", rating: 4.5, reviewCount: 201, stock: 55, isTrending: false },
+  { id: "demo-8", title: "Mechanical Keyboard", description: "Compact 75% mechanical keyboard with RGB backlight, blue switches and aluminium case. Satisfying tactile feel.", price: 199900, imageUrl: "https://picsum.photos/seed/keyboard/400/300", sellerName: "GadgetStore", category: "Gaming", rating: 4.6, reviewCount: 112, stock: 20, isTrending: true },
 ];
 
 function Stars({ rating }: { rating: number }) {
@@ -109,6 +127,13 @@ export default async function HomePage({
   }
 
   const isFiltered = !!(search || category || minPrice || maxPrice);
+
+  // Fallback: show demo products when DB is empty (Vercel SQLite not persisted)
+  if (!isFiltered && products.length === 0) {
+    products = DEMO_PRODUCTS;
+    trending = DEMO_PRODUCTS.filter((p) => p.isTrending);
+    totalProducts = DEMO_PRODUCTS.length;
+  }
 
   return (
     <>
@@ -260,12 +285,6 @@ export default async function HomePage({
     </>
   );
 }
-
-type Product = {
-  id: string; title: string; description: string; price: number; oldPrice?: number | null;
-  imageUrl?: string | null; sellerName: string; category: string; rating: number;
-  reviewCount: number; stock: number; isTrending: boolean;
-};
 
 function ProductCard({ product: p, t }: { product: Product; t: (key: string) => string }) {
   const discount = p.oldPrice && p.oldPrice > p.price
